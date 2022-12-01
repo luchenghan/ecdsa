@@ -59,4 +59,5 @@ func Initialize(conf *config.ArangoDB) {
 
 func connect(ctx context.Context, conf *config.ArangoDB) (driver.Database, error) {
 	// var conn driver.Database
+	return nil, nil
 }
