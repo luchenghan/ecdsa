@@ -2,32 +2,61 @@ package arangodb
 
 import (
 	"context"
+	"ecdsa/config"
+	"fmt"
 	"sync"
-	"time"
 
 	"github.com/arangodb/go-driver"
 )
 
 var once sync.Once
-
-type ArangoDB struct {
-	Address       string        `yaml:"address,omitempty"`
-	Database      string        `yaml:"database,omitempty"`
-	Connlimit     int           `yaml:"connlimit,omitempty"`
-	Username      string        `yaml:"username,omitempty"`
-	Password      string        `yaml:"password,omitempty"`
-	RetryCount    int           `yaml:"retryCount,omitempty"`
-	RetryInterval time.Duration `yaml:"retryInterval,omitempty"`
-	HttpProtocol  string        `yaml:"httpProtocol,omitempty"`
-}
+var handlers []*Handler
+var handlerIdx int
+var mu sync.Mutex
 
 type Handler struct {
 	db  driver.Database
 	ctx context.Context
 }
 
-func Initialize(config ArangoDB) {
-	once.Do(func() {
+func GetConn() *Handler {
+	mu.Lock()
+	defer mu.Unlock()
 
+	if len(handlers) == 0 {
+		fmt.Println("ArangoDB uninitialized connection")
+		return nil
+	}
+
+	handlerIdx++
+	if handlerIdx == len(handlers) {
+		handlerIdx = 0
+	}
+
+	return handlers[handlerIdx]
+}
+
+func Initialize(conf *config.ArangoDB) {
+	once.Do(func() {
+		switch conf.HttpProtocol {
+		case "1.1":
+			handlers = make([]*Handler, 1)
+		case "2":
+			handlers = make([]*Handler, conf.Connlimit)
+		}
+
+		for i := 0; i < len(handlers); i++ {
+			client, err := connect(context.Background(), conf)
+			if err != nil {
+				panic(err)
+			}
+			handlers[i].db = client
+		}
+
+		fmt.Println("ArangoDB Initialize Done")
 	})
+}
+
+func connect(ctx context.Context, conf *config.ArangoDB) (driver.Database, error) {
+	// var conn driver.Database
 }
