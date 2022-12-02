@@ -16,7 +16,7 @@ import (
 )
 
 var once sync.Once
-var handlers []*Handler
+var handlers []Handler
 var handlerIdx int
 var mu sync.Mutex
 var conf *config.ArangoDB
@@ -26,13 +26,12 @@ type Handler struct {
 	ctx context.Context
 }
 
-func GetConn() *Handler {
+func GetConn() Handler {
 	mu.Lock()
 	defer mu.Unlock()
 
 	if len(handlers) == 0 {
 		log.Fatalf("ArangoDB uninitialized connection\n")
-		return nil
 	}
 
 	handlerIdx++
@@ -50,17 +49,21 @@ func Initialize(c *config.ArangoDB) {
 		// Init handler by http protocol
 		switch conf.HttpProtocol {
 		case "1.1":
-			handlers = make([]*Handler, 1)
+			handlers = make([]Handler, 1)
 		case "2":
-			handlers = make([]*Handler, conf.Connlimit)
+			handlers = make([]Handler, conf.Connlimit)
 		}
 
 		for i := 0; i < len(handlers); i++ {
-			client, err := connect(context.Background())
+			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+			defer cancel()
+
+			db, err := connect(ctx)
 			if err != nil {
 				log.Fatalf("ArangoDB connect error: %v\n", err)
 			}
-			handlers[i].db = client
+			handlers[i].db = db
+			handlers[i].ctx = ctx
 		}
 
 		log.Printf("ArangoDB initialize done\n")
