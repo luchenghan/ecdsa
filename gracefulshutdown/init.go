@@ -33,6 +33,7 @@ func Init(srvNum int) {
 		wgs[i] = new(sync.WaitGroup)
 	}
 
+	// Listen os signal & wait group done
 	go func() {
 		<-*osShutdownChan
 		signal.Stop(*osShutdownChan)
