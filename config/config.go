@@ -3,7 +3,7 @@ package config
 import "time"
 
 type ArangoDB struct {
-	Address       string        `yaml:"address,omitempty"`
+	URLs          string        `yaml:"urls,omitempty"`
 	Database      string        `yaml:"database,omitempty"`
 	Connlimit     int           `yaml:"connlimit,omitempty"`
 	Username      string        `yaml:"username,omitempty"`
