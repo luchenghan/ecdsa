@@ -6,10 +6,13 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"crypto/x509"
+	"ecdsa/arangodb"
+	"ecdsa/config"
 	"encoding/pem"
 	"fmt"
 	"os"
 	"reflect"
+	"time"
 )
 
 func encode(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey) (string, string) {
@@ -72,7 +75,20 @@ func generatePrivateAndPublicKey() {
 }
 
 func main() {
-	generatePrivateAndPublicKey()
+	// generatePrivateAndPublicKey()
+	arangodb.Initialize(&config.ArangoDB{
+		URLs:          "http://localhost:8529",
+		Database:      "Database",
+		Connlimit:     40,
+		Username:      "",
+		Password:      "",
+		RetryCount:    5,
+		RetryInterval: 300 * time.Millisecond,
+		HttpProtocol:  "1.1",
+		Version:       "3.9.4",
+	})
+
+	arangodb.GetConn()
 	privateBytes, err := os.ReadFile("private.key")
 	if err != nil {
 		panic(err)
@@ -88,7 +104,6 @@ func main() {
 	// 數位簽章
 	msg := "hello world"
 	hash := sha256.Sum256([]byte(msg))
-	fmt.Printf("%x\n", hash)
 	sig, err := ecdsa.SignASN1(rand.Reader, privateKey, hash[:])
 	if err != nil {
 		panic(err)
