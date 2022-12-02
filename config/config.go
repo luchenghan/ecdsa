@@ -11,4 +11,5 @@ type ArangoDB struct {
 	RetryCount    int           `yaml:"retryCount,omitempty"`
 	RetryInterval time.Duration `yaml:"retryInterval,omitempty"`
 	HttpProtocol  string        `yaml:"httpProtocol,omitempty"`
+	Version       string        `yaml:"version,omitempty"`
 }

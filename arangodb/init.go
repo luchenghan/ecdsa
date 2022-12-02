@@ -118,8 +118,15 @@ func connect(ctx context.Context) (driver.Database, error) {
 		return nil, err
 	}
 
-	if _, err := client.Version(ctx); err != nil {
+	v, err := client.Version(ctx)
+	if err != nil {
 		log.Fatalf("ArangoDB check version error: %v", err)
+		return nil, err
+	}
+
+	i := v.Version.CompareTo(driver.Version(conf.Version))
+	if i != 0 {
+		log.Fatalf("ArangoDB wrong version")
 		return nil, err
 	}
 
