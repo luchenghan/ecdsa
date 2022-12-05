@@ -3,6 +3,7 @@ package arangodb
 import (
 	"context"
 	"ecdsa/config"
+	"ecdsa/gracefulshutdown"
 	"log"
 	"net"
 	"net/http"
@@ -56,7 +57,7 @@ func Initialize(c *config.ArangoDB) {
 
 		for i := 0; i < len(handlers); i++ {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-			defer cancel()
+			gracefulshutdown.SetContext(gracefulshutdown.ArangoDB_Level, ctx, cancel)
 
 			db, err := connect(ctx)
 			if err != nil {
@@ -126,14 +127,22 @@ func connect(ctx context.Context) (driver.Database, error) {
 
 	i := v.Version.CompareTo(driver.Version(conf.Version))
 	if i != 0 {
-		log.Fatalf("ArangoDB wrong version")
+		log.Fatalf("ArangoDB version wrong")
 		return nil, err
 	}
 
 	db, err := client.Database(ctx, conf.Database)
-	if err != nil {
-		log.Fatalf("ArangoDB get database error: %v", err)
-		return nil, err
+	if driver.IsNotFoundGeneral(err) {
+		db, err = client.CreateDatabase(ctx, conf.Database, nil)
+		if err != nil {
+			if driver.IsConflict(err) {
+				log.Fatalf("ArangoDB create database conflict")
+			} else {
+				log.Fatalf("ArangoDB create database error: %v", err)
+			}
+		}
+	} else if err != nil {
+		log.Fatalf("ArangoDB open database error: %v", err)
 	}
 
 	return db, nil

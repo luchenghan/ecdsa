@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strconv"
 	"time"
 )
 
@@ -74,8 +75,14 @@ func generatePrivateAndPublicKey() {
 	}
 }
 
-func main() {
-	// generatePrivateAndPublicKey()
+func timeToUnix13(time time.Time) uint64 {
+	if time.IsZero() {
+		return 0
+	}
+	return uint64(time.UnixNano()) / 1000000
+}
+
+func initArangoDB() {
 	arangodb.Initialize(&config.ArangoDB{
 		URLs:          "http://localhost:8529",
 		Database:      "Database",
@@ -85,10 +92,18 @@ func main() {
 		RetryCount:    5,
 		RetryInterval: 300 * time.Millisecond,
 		HttpProtocol:  "1.1",
-		Version:       "3.9.4",
+		Version:       "3.8.4",
 	})
+}
 
-	arangodb.GetConn()
+func main() {
+	// generatePrivateAndPublicKey()
+	initArangoDB()
+	d := arangodb.GetConn().EnsureCollection("erictest", nil)
+	if d == nil {
+		panic(d)
+	}
+
 	privateBytes, err := os.ReadFile("private.key")
 	if err != nil {
 		panic(err)
@@ -108,7 +123,14 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	timeunix := strconv.FormatUint(timeToUnix13(time.Now()), 10)
+	fmt.Printf("timestamp: %v\n", timeunix)
 	fmt.Printf("signature: %v\n", sig)
+
+	// ds := arangodb.DigtalSignature{
+	// 	Key:       timeunix,
+	// 	Signature: sig,
+	// }
 
 	f, _ := os.Create("signatureDer.txt")
 	_, writeErr := f.Write(sig)
