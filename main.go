@@ -8,8 +8,10 @@ import (
 	"crypto/x509"
 	"ecdsa/arangodb"
 	"ecdsa/config"
+	"ecdsa/gracefulshutdown"
 	"encoding/pem"
 	"fmt"
+	"math"
 	"os"
 	"reflect"
 	"strconv"
@@ -82,7 +84,8 @@ func timeToUnix13(time time.Time) uint64 {
 	return uint64(time.UnixNano()) / 1000000
 }
 
-func initArangoDB() {
+func init() {
+	gracefulshutdown.Init(math.MaxUint8)
 	arangodb.Initialize(&config.ArangoDB{
 		URLs:          "http://localhost:8529",
 		Database:      "Database",
@@ -98,11 +101,7 @@ func initArangoDB() {
 
 func main() {
 	// generatePrivateAndPublicKey()
-	initArangoDB()
-	d := arangodb.GetConn().EnsureCollection("erictest", nil)
-	if d == nil {
-		panic(d)
-	}
+	arangodb.GetConn().EnsureCollection("erictest", nil)
 
 	privateBytes, err := os.ReadFile("private.key")
 	if err != nil {
@@ -127,10 +126,12 @@ func main() {
 	fmt.Printf("timestamp: %v\n", timeunix)
 	fmt.Printf("signature: %v\n", sig)
 
-	// ds := arangodb.DigtalSignature{
-	// 	Key:       timeunix,
-	// 	Signature: sig,
-	// }
+	ds := arangodb.DigtalSignature{
+		Key:       timeunix,
+		Signature: sig,
+	}
+
+	arangodb.GetConn().TxDigtalSignature(ds)
 
 	f, _ := os.Create("signatureDer.txt")
 	_, writeErr := f.Write(sig)

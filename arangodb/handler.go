@@ -41,6 +41,7 @@ func (h Handler) TxDigtalSignature(ds DigtalSignature) {
 	}`
 
 	txOptions := &driver.TransactionOptions{
+		MaxTransactionSize:   100000,
 		WriteCollections:     []string{colName},
 		ReadCollections:      []string{colName},
 		ExclusiveCollections: []string{colName},
@@ -48,8 +49,8 @@ func (h Handler) TxDigtalSignature(ds DigtalSignature) {
 	}
 
 	result, err := h.db.Transaction(h.ctx, action, txOptions)
-	if !reflect.DeepEqual(1, result) {
-		Error.Printf("Transaction result %v, got: %v", 1, result)
+	if !reflect.DeepEqual(1.0, result.(float64)) {
+		Error.Printf("Transaction expect: %v, got: %v, error: %v", 1, result, err)
 		return
 	}
 	if err != nil {
