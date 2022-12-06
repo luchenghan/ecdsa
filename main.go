@@ -103,12 +103,12 @@ func main() {
 	// generatePrivateAndPublicKey()
 	arangodb.GetConn().EnsureCollection("erictest", nil)
 
-	privateBytes, err := os.ReadFile("private.key")
+	privateBytes, err := os.ReadFile("private.pem")
 	if err != nil {
 		panic(err)
 	}
 
-	publicBytes, err := os.ReadFile("public.key")
+	publicBytes, err := os.ReadFile("public.pem")
 	if err != nil {
 		panic(err)
 	}
