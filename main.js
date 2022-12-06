@@ -1,5 +1,5 @@
 const arango = require('./arangodbjs');
-const arangoHandler = require('./arangodbjs/handler')
+const arangoHandler = require('./arangodbjs/handler');
 var ellipticcurve = require("starkbank-ecdsa");
 var Ecdsa = ellipticcurve.Ecdsa;
 var Signature = ellipticcurve.Signature;
@@ -26,8 +26,8 @@ Promise.resolve()
         return init();
     })
     .then(async () => {
-        let result = await arangoHandler.getSignatureDoc("erictest", "1670291833718")
-        let decodeSig = Buffer.from(result.signature, 'base64')
+        let result = await arangoHandler.getSignatureDoc("erictest", "1670291833718");
+        let decodeSig = Buffer.from(result.signature, 'base64');
         let signature = Signature.fromDer(decodeSig.toString('binary'));
 
         console.log(Ecdsa.verify(message, signature, publicKey));
