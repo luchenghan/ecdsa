@@ -58,3 +58,18 @@ func (h Handler) TxDigtalSignature(ds DigtalSignature) {
 		return
 	}
 }
+
+func (h Handler) GetDigtalSignature(name string, key string) []byte {
+	c, err := h.db.Collection(h.ctx, name)
+	if err != nil {
+		log.Fatalf("Collection error: %v", err)
+	}
+	s := struct {
+		Signature []byte `json:"signature"`
+	}{}
+	_, err = c.ReadDocument(h.ctx, key, &s)
+	if err != nil {
+		log.Fatalf("Read Document error: %v", err)
+	}
+	return s.Signature
+}

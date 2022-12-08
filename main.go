@@ -55,13 +55,13 @@ func generatePrivateAndPublicKey() {
 	fmt.Println(pkStr)
 	fmt.Println(pubStr)
 
-	f, _ := os.Create("private.key")
+	f, _ := os.Create("private.pem")
 	_, writeStringErr := f.WriteString(pkStr)
 	if writeStringErr != nil {
 		panic(err)
 	}
 
-	f2, _ := os.Create("public.key")
+	f2, _ := os.Create("public.pem")
 	_, writeStringErr = f2.WriteString(pubStr)
 	if writeStringErr != nil {
 		panic(err)
@@ -133,11 +133,12 @@ func main() {
 
 	arangodb.GetConn().TxDigtalSignature(ds)
 
-	f, _ := os.Create("signatureDer.txt")
-	_, writeErr := f.Write(sig)
-	if writeErr != nil {
-		panic(writeErr)
-	}
+	sig = arangodb.GetConn().GetDigtalSignature("erictest", timeunix)
+	// f, _ := os.Create("signatureDer.txt")
+	// _, writeErr := f.Write(sig)
+	// if writeErr != nil {
+	// 	panic(writeErr)
+	// }
 
 	// 驗證
 	msg2 := "hello world"
