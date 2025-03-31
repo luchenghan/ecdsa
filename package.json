@@ -2,7 +2,7 @@
   "dependencies": {
     "arangojs": "^8.0.0",
     "dotenv": "^16.0.3",
-    "elliptic": "^6.5.4",
+    "elliptic": "^6.6.1",
     "joi": "^17.7.0",
     "lodash": "^4.17.21",
     "starkbank-ecdsa": "^1.1.5"
